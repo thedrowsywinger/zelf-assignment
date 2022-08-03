@@ -1,3 +1,14 @@
+import pathlib
+from urllib.parse import urlparse
+
+
+def get_extension_from_url(url: str):
+    results = urlparse(url)
+    filename = results.path.split("/")[-1]
+    extension = pathlib.Path(filename).suffixes[-1]
+    return extension
+
+
 user_agent_list = [
     'Mozilla/5.0 (Linux; Android 9; Mi A1 Build/PKQ1.180917.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.87 Mobile Safari/537.36 Viber/13.2.0.8',
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.1047.0 Safari/537.36 Edg/96.0.1047.0',

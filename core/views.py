@@ -1,13 +1,13 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.conf import settings
-from yaml import serialize
 
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
 import requests
+import uuid
 from bs4 import BeautifulSoup
 from random import choice
 
@@ -20,6 +20,7 @@ from core.serializers import (
 )
 
 from utils.constants import (
+    get_extension_from_url,
     user_agent_list
 )
 
@@ -50,10 +51,14 @@ class ScrapeImagesView(APIView):
             for img in i.findChildren('img')
         ]
 
-        title = 0
         for url in image_srcs:
             img_blob = requests.get(url, timeout=5).content
-            with open("./" + settings.MEDIA_URL + str(title), 'wb') as img_file:
+            destination = settings.MEDIA_URL + str(uuid.uuid1())
+            extension = get_extension_from_url(url)
+            with open("." + destination + extension, 'wb') as img_file:
                 img_file.write(img_blob)
-            title += 1
+                saving_image_instance = model(
+                    image_path=destination + extension, meta_data={"original_url": url})
+                saving_image_instance.save()
+
         return Response({"message": "Success"}, status=status.HTTP_200_OK)
