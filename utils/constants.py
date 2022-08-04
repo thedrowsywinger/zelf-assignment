@@ -1,5 +1,8 @@
 import pathlib
+import uuid
 from urllib.parse import urlparse
+
+from django.conf import settings
 
 
 def get_extension_from_url(url: str):
@@ -7,6 +10,13 @@ def get_extension_from_url(url: str):
     filename = results.path.split("/")[-1]
     extension = pathlib.Path(filename).suffixes[-1]
     return extension
+
+
+def get_file_path(url):
+    destination = settings.MEDIA_URL + str(uuid.uuid4())
+    extension = get_extension_from_url(url)
+    file_path = destination+extension
+    return file_path
 
 
 user_agent_list = [
