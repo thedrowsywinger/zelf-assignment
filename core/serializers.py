@@ -10,5 +10,6 @@ class image_info_serializer(serializers.ModelSerializer):
         fields = (
             'id',
             'image_path',
+            "original_url",
             'meta_data'
         )

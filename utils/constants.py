@@ -16,7 +16,7 @@ def get_file_path(url):
     destination = settings.MEDIA_URL + str(uuid.uuid4())
     extension = get_extension_from_url(url)
     file_path = destination+extension
-    return file_path
+    return file_path, extension
 
 
 user_agent_list = [
@@ -31,3 +31,8 @@ user_agent_list = [
     'Dalvik/2.1.0 (Linux; U; Android 6.0.1; HTC Desire 825 Build/MMB29M)',
     'Mozilla/5.0 (Linux; Android 9; W-P611-EEA) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.96 Mobile Safari/537.36'
 ]
+
+api_response_messages = {
+    "SUCCESS": "Success",
+    "SYSTEM_ERROR": "System Error"
+}
