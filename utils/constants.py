@@ -1,6 +1,7 @@
 import pathlib
 import uuid
 from urllib.parse import urlparse
+from PIL import Image
 
 from django.conf import settings
 
@@ -34,5 +35,31 @@ user_agent_list = [
 
 api_response_messages = {
     "SUCCESS": "Success",
-    "SYSTEM_ERROR": "System Error"
+    "SYSTEM_ERROR": "System Error",
+    "IMAGE_ERROR": "There was a problem generating the image."
+}
+
+image_width = {
+    "SMALL": 256,
+    "MEDIUM": 1024,
+    "LARGE": 2048
+}
+
+
+def resize_image(img, image_size, image_path):
+    width = image_width[image_size]
+    wpercent = (width / float(img.size[0]))
+    height = int((float(img.size[1]) * float(wpercent)))
+    img = img.resize((width, height), Image.ANTIALIAS)
+
+    file_path_splitter = image_path.split(".")
+    new_file_path = file_path_splitter[0] + \
+        "_" + image_size + "." + file_path_splitter[1]
+
+    return width, height, new_file_path
+
+
+resized_image_status = {
+    "YES": 0,
+    "NO": 1
 }
