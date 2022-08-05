@@ -40,23 +40,27 @@ class ImageView(APIView):
             if "id" in request.data:
 
                 result = model.objects.get(id=request.data['id'])
-                image_path = result.image_path
-                img = Image.open(image_path)
+                if not result.image_path.startswith("/"):
+                    file_path = BASE_DIR.joinpath(result.image_path)
+                else:
+                    file_path = BASE_DIR.joinpath(result.image_path[1:])
+
+                img = Image.open(file_path)
                 resized_image = resized_image_status["NO"]
                 if "size" in request.data:
                     width = result.meta_data['width']
                     height = result.meta_data['height']
                     if request.data['size'] == "small":
-                        width, height, image_path = resize_image(img,
-                                                                 "SMALL", result.image_path)
+                        width, height, image_path, resized_server_file_path = resize_image(img,
+                                                                                           "SMALL", file_path, result.image_path)
                         resized_image = resized_image_status["YES"]
                     elif request.data['size'] == "medium":
-                        width, height, image_path = resize_image(img,
-                                                                 "MEDIUM", result.image_path)
+                        width, height, image_path, resized_server_file_path = resize_image(img,
+                                                                                           "MEDIUM", file_path, result.image_path)
                         resized_image = resized_image_status["YES"]
                     elif request.data['size'] == "large":
-                        width, height, image_path = resize_image(img,
-                                                                 "LARGE", result.image_path)
+                        width, height, image_path, resized_server_file_path = resize_image(img,
+                                                                                           "LARGE", file_path, result.image_path)
                         resized_image = resized_image_status["YES"]
                     else:
                         resized_image = resized_image_status["NO"]
@@ -66,33 +70,18 @@ class ImageView(APIView):
                     serializer = self.serializer_class(result)
                     final_output = serializer.data
                     final_output['resized_image'] = {
-                        "image_path": image_path,
+                        "image_path": resized_server_file_path,
                         "meta_data": {
                             "width": width,
                             "height": height
                         }
                     }
 
-                    try:
-                        with open(image_path, "rb") as image_file:
-                            encoded_string = base64.b64encode(
-                                image_file.read())
-                            final_output['encoded_image'] = encoded_string
-                            return Response({"message": api_response_messages["SUCCESS"], "data": final_output}, status=status.HTTP_200_OK)
-                    except Exception as e:
-                        return Response({"message": api_response_messages["IMAGE_ERROR"]}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"message": api_response_messages["SUCCESS"], "data": final_output}, status=status.HTTP_200_OK)
 
-                img.save(image_path)
                 serializer = self.serializer_class(result)
-                final_output = serializer.data
-                try:
-                    with open(image_path, "rb") as image_file:
-                        encoded_string = base64.b64encode(
-                            image_file.read())
-                        final_output['encoded_image'] = encoded_string
-                        return Response({"message": api_response_messages["SUCCESS"], "data": final_output}, status=status.HTTP_200_OK)
-                except Exception as e:
-                    return Response({"message": api_response_messages["IMAGE_ERROR"]}, status=status.HTTP_400_BAD_REQUEST)
+
+                return Response({"message": api_response_messages["SUCCESS"], "data": serializer.data}, status=status.HTTP_200_OK)
 
             elif "original_url" in request.data:
                 result = model.objects.filter(
@@ -129,17 +118,17 @@ class ScrapeImagesView(APIView):
                 try:
                     image_from_bytes = Image.open(
                         requests.get(url, timeout=5, stream=True).raw)
-                    file_path, extension = get_file_path(url)
+                    server_file_path, extension = get_file_path(url)
                     if extension != "gif":
-                        if not file_path.startswith("/"):
-                            file_path = BASE_DIR.joinpath(file_path)
+                        if not server_file_path.startswith("/"):
+                            file_path = BASE_DIR.joinpath(server_file_path)
                         else:
-                            file_path = BASE_DIR.joinpath(file_path[1:])
+                            file_path = BASE_DIR.joinpath(server_file_path[1:])
 
                         image_from_bytes.save(file_path)
 
                         saving_image_instance = model(
-                            image_path=file_path,
+                            image_path=server_file_path,
                             original_url=request.data['url'],
                             meta_data={
                                 "original_url": url,

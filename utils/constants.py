@@ -46,17 +46,21 @@ image_width = {
 }
 
 
-def resize_image(img, image_size, image_path):
+def resize_image(img, image_size, image_path, server_file_path):
     width = image_width[image_size]
     wpercent = (width / float(img.size[0]))
     height = int((float(img.size[1]) * float(wpercent)))
     img = img.resize((width, height), Image.ANTIALIAS)
 
-    file_path_splitter = image_path.split(".")
+    file_path_splitter = str(image_path).split(".")
     new_file_path = file_path_splitter[0] + \
         "_" + image_size + "." + file_path_splitter[1]
 
-    return width, height, new_file_path
+    server_file_path_splitter = str(server_file_path).split(".")
+    new_server_file_path = server_file_path_splitter[0] + \
+        "_" + image_size + "." + server_file_path_splitter[1]
+
+    return width, height, new_file_path, new_server_file_path
 
 
 resized_image_status = {
