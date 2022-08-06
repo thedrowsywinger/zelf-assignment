@@ -12,15 +12,12 @@ from core.models import (
     Image as model
 )
 from django.shortcuts import render
-from django.http import FileResponse, HttpResponse
 
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
 import requests
-import base64
-from wsgiref.util import FileWrapper
 from bs4 import BeautifulSoup
 from random import choice
 from datetime import datetime
@@ -32,22 +29,34 @@ from zelf_scraper.settings import BASE_DIR
 
 
 class ImageView(APIView):
-
+    """
+        This view will contain the querying part of the assessment. 
+        The results are filtered based on either id or original url, or it returns all
+        images. 
+    """
     serializer_class = image_info_serializer
 
     def get(self, request, *args, **kwargs):
         try:
             if "id" in request.data:
 
+                # Querying by id
                 result = model.objects.get(id=request.data['id'])
-                if not result.image_path.startswith("/"):
-                    file_path = BASE_DIR.joinpath(result.image_path)
-                else:
-                    file_path = BASE_DIR.joinpath(result.image_path[1:])
 
-                img = Image.open(file_path)
-                resized_image = resized_image_status["NO"]
                 if "size" in request.data:
+                    """
+                        If size is in the POST request, that means the image 
+                        needs to be resized. Therefore we need to get the
+                        full path of the image, open it and resize it.
+                    """
+                    if not result.image_path.startswith("/"):
+                        # My system has a media folder in the root, this is
+                        # why I needed to handle this case
+                        file_path = BASE_DIR.joinpath(result.image_path)
+                    else:
+                        file_path = BASE_DIR.joinpath(result.image_path[1:])
+                    img = Image.open(file_path)
+                    resized_image = resized_image_status["NO"]
                     width = result.meta_data['width']
                     height = result.meta_data['height']
                     if request.data['size'] == "small":
@@ -66,6 +75,10 @@ class ImageView(APIView):
                         resized_image = resized_image_status["NO"]
 
                 if resized_image == resized_image_status["YES"]:
+                    """
+                        In this case the system will return the resized image
+                        information alongside the original image information
+                    """
                     img.save(image_path)
                     serializer = self.serializer_class(result)
                     final_output = serializer.data
@@ -99,6 +112,10 @@ class ImageView(APIView):
 class ScrapeImagesView(APIView):
 
     def post(self, request, *args, **kwargs):
+        """
+            Using choice from python random, to randomly choose a user agent for
+            scraping, to avoid getting caught. 
+        """
         try:
             result = requests.get(
                 request.data['url'], headers={"User-Agent": choice(user_agent_list)})
@@ -112,7 +129,6 @@ class ScrapeImagesView(APIView):
             ]
 
             invalid_urls = []
-            print(image_srcs)
 
             for url in image_srcs:
                 try:
@@ -137,9 +153,7 @@ class ScrapeImagesView(APIView):
                                 "width": image_from_bytes.width
                             })
                         saving_image_instance.save()
-                        print("Saved")
-                except Exception as e:
-                    print(e)
+                except:
                     invalid_urls.append(url)
 
             return Response({"message": api_response_messages['SUCCESS'], "Invalid URLs": invalid_urls}, status=status.HTTP_200_OK)

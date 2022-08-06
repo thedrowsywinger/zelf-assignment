@@ -24,11 +24,6 @@ from rest_framework.schemas import get_schema_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/core/', include('core.urls')),
-    path('api/docs/', get_schema_view(
-        title="Zelf Scraper",
-        description="API Docs",
-        version="1.0.0"
-    ), name='openapi-schema'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

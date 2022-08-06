@@ -47,6 +47,10 @@ image_width = {
 
 
 def resize_image(img, image_size, image_path, server_file_path):
+    """
+        This function takes the new image width , sets height accordingly
+        to maintain aspect ratio, and resizes the image.
+    """
     width = image_width[image_size]
     wpercent = (width / float(img.size[0]))
     height = int((float(img.size[1]) * float(wpercent)))

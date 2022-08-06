@@ -5,6 +5,6 @@ from core.views import (
 )
 
 urlpatterns = [
-    path("image/", ImageView.as_view(), name="test"),
+    path("image/", ImageView.as_view(), name="image_queries"),
     path("scrape-ebay/", ScrapeImagesView.as_view(), name="scrape_images")
 ]
